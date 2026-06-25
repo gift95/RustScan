@@ -1,0 +1,48 @@
+name: Sync upstream master and merge to git95
+
+on:
+  schedule:
+    # 每小时第 0 分运行（UTC），您可根据需要调整
+    - cron: '0 * * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  sync-and-merge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # 关键：授予写入权限
+    steps:
+      - name: Checkout current repository (master)
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0   # 完整历史，便于合并
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/bee-san/RustScan.git
+          # 若上游私有，使用带 token 的地址（示例）：
+          # git remote add upstream https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/上游用户/上游仓库.git
+
+      - name: Fetch upstream master
+        run: git fetch upstream master
+
+      - name: Update local master with upstream/master (fast-forward only)
+        run: |
+          git checkout master
+          git merge --ff-only upstream/master
+        # 若因分叉导致快进失败，可改用普通合并：git merge upstream/master
+
+      - name: Merge master into gift95
+        run: |
+          git checkout gift95
+          # 先确保 git95 是最新的（拉取远程的 git95 以防本地落后）
+          git pull origin gift95
+          # 合并 master 到 git95（普通合并，产生合并提交）
+          git merge master -m "Merge master into gift95 (auto-sync)"
+        # 若发生冲突，此步会失败，工作流终止
+
+      - name: Push both branches to origin
+        run: |
+          git push origin master
+          git push origin gift95
