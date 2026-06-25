@@ -1,14 +1,29 @@
 name: Dependabot Auto-Merge
 
+on:
+  pull_request:
+    branches:
+      - gift95          # 只针对 gift95 分支的 PR 生效
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: write       # 允许合并 PR
+  pull-requests: write  # 允许审批 PR
+
 jobs:
   dependabot:
     runs-on: ubuntu-latest
+    # 仅当 PR 作者是 Dependabot 时执行（若想自动合并所有 PR，可删除该条件）
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
       - name: Enable auto-merge for Dependabot PRs
         run: |
           gh pr review --approve "$PR_URL"
-          gh pr merge --auto --merge "$PR_URL"
+          gh pr merge --auto --squash "$PR_URL"   # 使用 squash 合并，可按需改为 --merge
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
