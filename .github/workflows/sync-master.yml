@@ -3,7 +3,7 @@ name: Sync upstream master and merge to git95
 on:
   schedule:
     # 每小时第 0 分运行（UTC），您可根据需要调整
-    - cron: '0 * * * *'
+    - cron: '0 0/6 * * *'
   workflow_dispatch:  # 允许手动触发
 
 jobs:
